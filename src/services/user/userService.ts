@@ -1,12 +1,14 @@
-import { UserCreateInput } from "../generated/prisma/models/User.ts";
-import prisma from "../config/prisma.ts";
-import { Prisma } from "../generated/prisma/client.ts";
+import { UserCreateInput } from "../../generated/prisma/models/User.ts";
+import prisma from "../../config/prisma.ts";
+import { Prisma } from "../../generated/prisma/client.ts";
+import { LoginInputType } from "./login.ts";
+import passwordUtil from "../../utils/password/passwordUtil.ts";
 
 const createUser = async (data: UserCreateInput) => {
     try {
-    return await prisma.user.create({
-        data,
-    });
+        return await prisma.user.create({
+            data,
+        });
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             // Prisma error 객체 내부에 code 항목 값이 "P2002"인 것이
@@ -25,18 +27,17 @@ const createUser = async (data: UserCreateInput) => {
                     // 상위함수로 새로운 자바스크립트의 표준 객체를 만들어서 던짐
                     // 그 내용은 "ALREADY_EXISTS_USERNAME"이라고 담음
                     throw new Error("ALREADY_EXISTS_USERNAME");
-                    }
+                }
                 if (errorMessage.includes("email")) {
                     throw new Error("ALREADY_EXISTS_EMAIL");
                 }
                 if (errorMessage.includes("nickname")) {
                     throw new Error("ALREADY_EXISTS_NICKNAME");
                 }
-                throw error;      // return과 같은데 값을 리턴하는게 아니라 에러를 리턴하는 키워드
-            }
-
+                throw error; // return과 같은데 값을 리턴하는게 아니라 에러를 리턴하는 키워드
             }
         }
+    }
 };
 
 // 1. Prisma 에러 발생! 얜 5가지 종류 에러 존재
@@ -44,6 +45,36 @@ const createUser = async (data: UserCreateInput) => {
 // 3. Controller의 catch에 잡힘
 // 4. 자바스크립트 표준 Error가 아니므로, if 통과
 
+const login = async (data: LoginInputType) => {
+    try {
+        // prisma.테이블.findUnique(조건객체) : SELECT 명령 (단, Unique 칼럼을 통해)
+        // findUnique라는 메서드는 객체 1개만 리턴
+        // find라는 메서드는 Array가 리턴
+        const user = await prisma.user.findUnique({
+            where: {
+                username: data.username,
+            },
+        });
+
+        // 검색을 했는데 해당하는 내용이 없는건, 에러가 아님.
+        // DB에서 조회한 내용인 user가 없거나 deletedAt의 값이 있으면
+        if (!user || user.deletedAt) {
+            throw new Error("INVALID_CREDENTIALS")
+        }
+
+        const isValid = await passwordUtil.verifyPassword(data.password, user.password);
+        if (!isValid) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        // 아이디와 비밀번호가 일치하는 정보가 있다는 뜻
+
+    } catch (error) {
+
+    }
+};
+
 export default {
     createUser,
+    login,
 };
