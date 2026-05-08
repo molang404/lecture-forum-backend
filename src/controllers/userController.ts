@@ -45,13 +45,13 @@ const createUser = async (req: Request, res: Response) => {
         if (error instanceof Error) {
             switch (error.message) {
                 case "ALREADY_EXISTS_USERNAME":
-                    res.status(409).json({ error: "이미 사용중인 아이디입니다. "});
+                    res.status(409).json({ error: "이미 사용중인 아이디입니다. " });
                     return;
                 case "ALREADY_EXISTS_EMAIL":
-                    res.status(409).json({ error: "이미 가입된 이메일입니다. "});
+                    res.status(409).json({ error: "이미 가입된 이메일입니다. " });
                     return;
                 case "ALREADY_EXISTS_NICKNAME":
-                    res.status(409).json({ error: "이미 사용중인 닉네임입니다. "});
+                    res.status(409).json({ error: "이미 사용중인 닉네임입니다. " });
                     return;
                 default:
                     console.log(error);
@@ -69,16 +69,22 @@ const createUser = async (req: Request, res: Response) => {
     }
 };
 
-const login = (req: Request, res: Response) => {
-    // login 이라는 기능은, 들어온 비밀번호 값과 데이터베이스에서 가져온 비밀번호 값을
-    // 비교해야 함.
-    // 뭔가를 Controller에서 해주기 보다, DB에 값을 가져오는게 우선이므로
-    // 그냥 service로 바로 보냄
-    const loginData: LoginInputType = req.body;
+const login = async (req: Request, res: Response) => {
+    try {
+        // login 이라는 기능은, 들어온 비밀번호 값과 데이터베이스에서 가져온 비밀번호 값을
+        // 비교해야 함.
+        // 뭔가를 Controller에서 해주기 보다, DB에 값을 가져오는게 우선이므로
+        // 그냥 service로 바로 보냄
+        const loginData: LoginInputType = req.body;
 
+        const result = await userService.login(loginData);
 
-    const result = userService.login(loginData);
-}
+        res.status(200).json({
+            message: "로그인에 성공했습니다.",
+            data: result,
+        });
+    } catch (error) {}
+};
 
 export default {
     createUser,
