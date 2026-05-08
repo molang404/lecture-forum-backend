@@ -13,7 +13,7 @@ datasource db {
   provider = "mysql"
 }
 
-// 이 아랫부분 부터는 내가 실제 데이터 베이스에 사용할 모델링을 기재 -> prisma의 문법을 통제
+// 이 아랫부분에는 내가 실제 데이터베이스에 사용할 모델링을 기재 -> prisma의 문법을 통해
 
 enum GenderType {
   MALE
@@ -31,18 +31,19 @@ enum RoleType {
 // @id : primary key
 // @default : default
 // @unique : unique
-// @updatedAt : 해당 칼럼이 수정될 때 자동으로 들어가는 수정 시간 계산 옵션
+// @updatedAt : 해당 칼럼이 수정될 때 자동으로 들어가는 수정 시간 갱신 옵션
 model User {
   id          Int        @id @default(autoincrement())
-  createdAT   DateTime   @default(now()) // 삽입할 때 기본값으로 시간이 기록
-  updateAt    DateTime   @updatedAt // 수정할 때 기본값으로 시간이 기록
+  createdAt   DateTime   @default(now()) // 삽입할 때 기본값으로 삽입 시간이 기록
+  updatedAt   DateTime   @updatedAt // 수정할 때 기본적으로 수정 시간이 기록
   deletedAt   DateTime? // 타입에 ? 를 넣으면 null을 허용한다는 뜻
   username    String     @unique
+  password    String
   name        String
   nickname    String     @unique
   email       String     @unique
   phoneNumber String?
-  birthdate   String?
+  birthdate   DateTime?
   gender      GenderType
   role        RoleType   @default(USER) // 삽입할 때 기본값으로 USER 기록
 }
