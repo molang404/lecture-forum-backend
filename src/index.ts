@@ -8,8 +8,10 @@ const app = express();
 const PORT = process.env.PORT || 8001;
 
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: true }));
 
+// 프론트앤드가 하는 요청(Request)에 대하여 경로
 app.use("/user", userRouter);
 
 app.listen(PORT, () => {
