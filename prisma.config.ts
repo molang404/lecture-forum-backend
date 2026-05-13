@@ -3,8 +3,6 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
-const DATABASE_URL = `mysql://${process.env.DATABASE_USERNAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`;
-
 export default defineConfig({
     // schema : prisma가 동작할 때 참고해야 하는 스키마 파일의 위치 지정
     schema: "prisma/schema.prisma",
@@ -14,6 +12,6 @@ export default defineConfig({
     },
     // datasource : prisma가 데이터 베이스에 접근할 때 사용하는 정보를 지정
     datasource: {
-        url: DATABASE_URL,
+
     },
 });
