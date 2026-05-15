@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { UserCreateInput } from "../generated/prisma/models/User.ts";
 import userService from "../services/user/userService.ts";
-import passwordUtil from "../utils/password/passwordUtil.ts";
 import { LoginInputType } from "../schemas/user/login.ts";
+import bcrypt from "bcrypt";
 
 const createUser = async (req: Request, res: Response) => {
     try {
@@ -17,7 +17,7 @@ const createUser = async (req: Request, res: Response) => {
         // bcrypt.hash(암호화할string, 암호화단계숫자) : 비동기함수, 단방향 암호화 메서드
         const userData: UserCreateInput = {
             username,
-            password: await passwordUtil.hashPassword(password),
+            password: await bcrypt.hash(password, 10),
             name,
             nickname,
             email,
