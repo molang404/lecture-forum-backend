@@ -25,6 +25,11 @@ enum RoleType {
   USER
 }
 
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
 // model 키워드는 Javascript에서는 객체가 되며, DB에서는 테이블이 됨
 // 이 안에 기재하는 건, [칼럼명] [타입] [옵션] 으로 작성하고
 // 옵션 -----
@@ -46,4 +51,12 @@ model User {
   birthdate   DateTime?
   gender      GenderType
   role        RoleType   @default(USER) // 삽입할 때 기본값으로 USER 기록
+}
+
+model Category {
+  id        Int            @id @default(autoincrement())
+  createdAt DateTime       @default(now())
+  updatedAT DateTime       @updatedAt
+  name      String
+  status    CategoryStatus @default(ACTIVE)
 }
