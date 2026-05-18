@@ -17,7 +17,7 @@ const createUser = async (req: Request, res: Response) => {
         // bcrypt.hash(암호화할string, 암호화단계숫자) : 비동기함수, 단방향 암호화 메서드
         const userData: UserCreateInput = {
             username,
-            password: await passwordUtil.hashPassword(password),
+            password: await passwordUtil.hashPassword(password), // await bcrypt.hash(password, 10) -> 여러 곳에 사용하기 위해 리팩터링
             name,
             nickname,
             email,
@@ -62,7 +62,7 @@ const createUser = async (req: Request, res: Response) => {
         console.log(error);
         res.status(500).json({ message: "유저 생성 중 오류가 발생했습니다." });
 
-        // controller에 도착하는 에러는.
+        // controller에 도착하는 에러는
         // 자바스크립트 표준 규격의 에러일 것이다 라고 상정한 것
         // 하지만, 실제 에러가 발생하는 지점은
         // prisma의 에러이고, 얘는 자바스크립트 표준 규격 X
