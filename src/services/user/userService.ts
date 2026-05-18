@@ -7,7 +7,7 @@ import {LoginInputType} from "../../schemas/user/login.ts";
 
 const createUser = async (data: UserCreateInput) => {
     try {
-        return await prisma.user.create({
+        return prisma.user.create({
             data,
         });
     } catch (error) {
