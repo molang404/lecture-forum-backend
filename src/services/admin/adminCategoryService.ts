@@ -6,10 +6,10 @@ const getCategoryList = async () => {
     return prisma.category.findMany({
         orderBy: {
             id: "desc",
-        }
+        },
     });
-}
+};
 
 export default {
     getCategoryList,
-}
+};
