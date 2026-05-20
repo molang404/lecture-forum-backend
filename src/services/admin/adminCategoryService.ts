@@ -58,6 +58,20 @@ const toggleCategoryStatus = async (id: number) => {
     });
 };
 
+const getCategoryById = async (id: number) => {
+        const category = prisma.category.findUnique({
+            where: {
+                id,
+            },
+        });
+
+        if (!category) {
+            throw new Error("CATEGORY_NOT_FOUND");
+        }
+
+        return category;
+};
+
 const updateCategory = async (id: number, input: CategoryUpdateInput) => {
     try {
         return prisma.category.update({
@@ -65,7 +79,7 @@ const updateCategory = async (id: number, input: CategoryUpdateInput) => {
                 id,
             },
             data: input,
-        })
+        });
     } catch (error) {
         if (error instanceof Prisma.PrismaClientKnownRequestError) {
             // Prisma의 에러 코드 P2002는 중복값이 있을 때 나오는 에러 코드
@@ -86,4 +100,5 @@ export default {
     createCategory,
     toggleCategoryStatus,
     updateCategory,
+    getCategoryById,
 };
