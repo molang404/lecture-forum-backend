@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import adminCategoryService from "../../services/admin/adminCategoryService.ts";
+import { CategoryCreateInput } from "../../generated/prisma/models/Category.ts";
+import { AdminCreateCategoryInputType } from "../../schemas/admin/category/createCategory.ts";
 
 const getCategoryList = async (req: Request, res: Response) => {
     try {
@@ -15,6 +17,22 @@ const getCategoryList = async (req: Request, res: Response) => {
     }
 };
 
+const createCategory = async (req: Request, res: Response) => {
+    try {
+        // AdminCreateCategoryInputType은 "들어오는 입력값"에 대한 타입
+        // CategoryCreateInput은 "데이터베이스에 저장할 데이터"의 타입
+        const { name }: AdminCreateCategoryInputType = req.body;
+
+        const newCategory: CategoryCreateInput = { name };
+        const result = await adminCategoryService.createCategory(newCategory);
+        res.status(200).json({
+            message: "카테고리가 정상적으로 생성되었습니다.",
+            data: result,
+        });
+    } catch (error) {}
+};
+
 export default {
     getCategoryList,
+    createCategory,
 };
