@@ -38,11 +38,22 @@ const createCategory = async (req: Request, res: Response) => {
         }
 
         console.log(error);
-        res.status(409).json({ message: "카테고리 생성 중 서버 에러가 발생하였습니다.ㅛ" });
+        res.status(500).json({ message: "카테고리 생성 중 서버 에러가 발생하였습니다." });
     }
+};
+
+const toggleCategoryStatus = async (req: Request<{ id: string }>, res: Response) => {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        res.status(400).json({ message: "유효하지 않은 카테고리 ID입니다."});
+        return;
+    }
+
+    const result = adminCategoryService.toggleCategoryStatus(id);
 };
 
 export default {
     getCategoryList,
     createCategory,
+    toggleCategoryStatus,
 };
