@@ -1,0 +1,152 @@
+import { Request, Response } from "express";
+import adminUserService from "../../../services/admin/user/adminUserService.ts";
+import { AdminCreateUserInputType } from "../../../schemas/admin/user/createUser.ts";
+import { UserCreateInput, UserUpdateInput } from "../../../generated/prisma/models/User.ts";
+import passwordUtil from "../../../utils/password/passwordUtil.ts";
+import userService from "../../../services/user/userService.ts";
+import { AdminUpdateUserInputType } from "../../../schemas/admin/user/updateUser.ts";
+
+const getUserList = async (req: Request, res: Response) => {
+    try {
+        const users = await adminUserService.getUserList();
+        res.status(200).json({
+            message: "유저 목록을 성공적으로 불러왔습니다.",
+            data: users,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "유저 목록을 불러오는 중 오류가 발생했습니다.",
+        });
+    }
+};
+
+const getUserById = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(400).json({
+                message: "유효하지 않은 사용자 ID입니다.",
+            });
+            return;
+        }
+
+        const user = await adminUserService.getUserById(id);
+
+        res.status(200).json({
+            message: "유저 정보를 성공적으로 불러왔습니다.",
+            data: user,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "유저 목록을 불러오는 중 오류가 발생했습니다.",
+        });
+    }
+};
+
+const createUser = async (req: Request, res: Response) => {
+    try {
+        // 사용자가 입력한 값을 그대로 DB에 쓰면 안됨
+        // 1. Why? 비밀번호가 평문이니까, 암호화해서 서비스에게 넘겨줘야 함
+        // 2. 타입이 안 맞음. birthdate가 string으로 옴. 이걸 Date 타입으로 바꿔줘야 함
+
+        // 프론트앤드에서 전달된 값들이 들어있는 req.body의 타입은?
+        const { password, birthdate, phoneNumber, ...restData }: AdminCreateUserInputType =
+            req.body;
+
+        // 데이터 베이스에서 생성할 때 집어넣을 내용으로 변환
+        const newUser: UserCreateInput = {
+            ...restData,
+            password: await passwordUtil.hashPassword(password),
+            phoneNumber: phoneNumber ?? null, // phoneNumber가 있으면 그 값을 쓰고, 없으면 null
+            birthdate: birthdate ? new Date(birthdate) : null,
+        };
+
+        const result = await userService.createUser(newUser);
+
+        res.status(200).json({
+            message: "유저를 성공적으로 생성했습니다.",
+            data: result,
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            switch (error.message) {
+                case "ALREADY_EXISTS_USERNAME":
+                    res.status(409).json({ message: "이미 사용중인 아이디입니다. " });
+                    return;
+                case "ALREADY_EXISTS_EMAIL":
+                    res.status(409).json({ message: "이미 가입된 이메일입니다. " });
+                    return;
+                case "ALREADY_EXISTS_NICKNAME":
+                    res.status(409).json({ message: "이미 사용중인 닉네임입니다. " });
+                    return;
+                default:
+                    console.log(error);
+                    res.status(500).json({ message: "유저 생성 중 오류가 발생했습니다." });
+            }
+        }
+
+        console.log(error);
+        res.status(500).json({ message: "유저 생성 중 오류가 발생했습니다." });
+    }
+};
+
+const updateUser = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(400).json({ message: "유효하지 않은 사용자 ID입니다." });
+            return;
+        }
+        const { password, birthdate, phoneNumber, ...restData }: AdminUpdateUserInputType =
+            req.body;
+
+        const newUser: UserUpdateInput = {
+            ...restData,
+        };
+        // 업데이트할 데이터에 null을 집어넣으면,
+        // prisma (DB)는 그 칼럼의 값을 <null>로 바꿔버림, 즉 있던 값을 삭제해버림
+        if (password) {
+            newUser.password = await passwordUtil.hashPassword(password);
+        }
+        if (birthdate) {
+            newUser.birthdate = new Date(birthdate);
+        }
+        if (phoneNumber) {
+            newUser.phoneNumber = phoneNumber;
+        }
+
+        const result = await adminUserService.updateUser(newUser, id);
+
+        res.status(200).json({
+            message: "유저를 성공적으로 생성했습니다.",
+            data: result,
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            switch (error.message) {
+                case "USER_NOT_FOUND":
+                    res.status(404).json({ message: "사용자를 찾을 수 없습니다."});
+                    return;
+                case "ALREADY_EXISTS_USERNAME":
+                    res.status(409).json({ message: "이미 사용 중인 아이디입니다."});
+                    return;
+                case "ALREADY_EXISTS_EMAIL":
+                    res.status(409).json({ message: "이미 사용 중인 이메일입니다."});
+                    return;
+                case "ALREADY_EXISTS_NICKNAME":
+                    res.status(409).json({ message: "이미 사용 중인 닉네임입니다."});
+                    return;
+            }
+        }
+        res.status(500).json({ message: "서버 에러가 발생했습니다."});
+    }
+};
+
+export default {
+    getUserList,
+    getUserById,
+    createUser,
+    updateUser,
+};

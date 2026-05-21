@@ -3,7 +3,7 @@ import { GenderType } from "../../generated/prisma/enums.ts";
 
 export const createUserSchema = z.object({
     username: z.string().min(4),
-    password: z.string().min(8),
+    password: z.string().min(6),
     name: z.string().min(2),
     nickname: z.string().min(2).max(10),
     email: z.email(),
