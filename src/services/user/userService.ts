@@ -3,7 +3,7 @@ import prisma from "../../config/prisma.ts";
 import { Prisma } from "../../generated/prisma/client.ts";
 import passwordUtil from "../../utils/password/passwordUtil.ts";
 import jwtUtil from "../../utils/jwt/jwtUtil.ts";
-import {LoginInputType} from "../../schemas/user/login.ts";
+import { LoginInputType } from "../../schemas/user/login.ts";
 
 const createUser = async (data: UserCreateInput) => {
     try {
@@ -45,6 +45,20 @@ const createUser = async (data: UserCreateInput) => {
 // 2. catch 실행, 우리가 지정한 Error가 아니면 그 에러 객체 그대로 상위 함수에 throw
 // 3. Controller의 catch에 잡힘
 // 4. 자바스크립트 표준 Error가 아니므로, if 통과
+
+const getUserById = async (id: number) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id,
+        },
+    });
+
+    if (!user) {
+        throw new Error("USER_NOT_FOUND");
+    }
+
+    return user;
+};
 
 const login = async (data: LoginInputType) => {
     // prisma.테이블.findUnique(조건객체) : SELECT 명령 (단, Unique 칼럼을 통해)
@@ -88,4 +102,5 @@ const login = async (data: LoginInputType) => {
 export default {
     createUser,
     login,
+    getUserById,
 };
