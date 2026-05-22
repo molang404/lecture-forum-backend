@@ -1,8 +1,6 @@
 import prisma from "../../config/prisma.ts";
-import {
-    CategoryCreateInput,
-} from "../../generated/prisma/models/Category.ts";
-import { Prisma } from "../../generated/prisma/client.ts";
+import { CategoryCreateInput } from "../../generated/prisma/models/Category.ts";
+import { CategoryStatus, Prisma } from "../../generated/prisma/client.ts";
 
 const getCategoryList = async () => {
     // findMany() : 데이터베이스에서 여러 개의 row를 SELECT 하는 메서드
@@ -31,11 +29,26 @@ const createCategory = async (input: CategoryCreateInput) => {
 };
 
 const toggleCategoryStatus = async (id: number) => {
-    try {
+        const exist = await prisma.category.findUnique({
+            where: {
+                id,
+            },
+        });
 
-    } catch (error) {
+        if (!exist) {
+            throw new Error("CATEGORY_NOT_FOUND");
+        }
 
-    }
+        const newStatus = exist.status === CategoryStatus.ACTIVE ? CategoryStatus.INACTIVE : CategoryStatus.ACTIVE;
+
+        return prisma.category.update({
+            where: {
+                id,
+            },
+            data: {
+                status: newStatus,
+            }
+        });
 }
 
 export default {

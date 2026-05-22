@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import adminCategoryService from "../../services/admin/adminCategoryService.ts";
 import { CategoryCreateInput } from "../../generated/prisma/models/Category.ts";
 import { AdminCreateCategoryInputType } from "../../schemas/admin/category/createCategory.ts";
+import {CategoryStatus} from "../../generated/prisma/enums.ts";
 
 const getCategoryList = async (req: Request, res: Response) => {
     try {
@@ -43,13 +44,30 @@ const createCategory = async (req: Request, res: Response) => {
 };
 
 const toggleCategoryStatus = async (req: Request<{ id: string }>, res: Response) => {
+    try {
     const id = Number(req.params.id);
     if (isNaN(id)) {
         res.status(400).json({ message: "유효하지 않은 카테고리 ID입니다."});
         return;
     }
 
-    const result = adminCategoryService.toggleCategoryStatus(id);
+    const result = await adminCategoryService.toggleCategoryStatus(id);
+
+    res.status(200).json({
+        message: `카테고리가 ${result.status === CategoryStatus.ACTIVE ? "활성화" : "비활성화"} 되었습니다.`,
+        data: result,
+    });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "CATEGORY_NOT_FOUND") {
+                res.status(400).json({ message: "카테고리를 찾을 수 없습니다." });
+                return;
+            }
+        }
+
+        console.log(error);
+        res.status(500).json({ message: "서버 에러가 발생했습니다." });
+    }
 };
 
 export default {
