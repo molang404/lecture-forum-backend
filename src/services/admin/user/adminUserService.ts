@@ -87,9 +87,34 @@ const updateUser = async (input: UserUpdateInput, id: number) => {
     }
 };
 
+const toggleUser = async (id: number) => {
+    // 실제 데이터 베이스에 DELETE 로 요청하는게 아닌,
+    // UPDATE로 deleteAt만 날짜를 기록할 것임 (소트프삭제)
+    const user = await prisma.user.findUnique({
+        where: {
+            id,
+        }
+    });
+    if (!user) {
+        throw new Error("USER_NOT_FOUND");
+    }
+    if (user.deletedAt) {
+        throw new Error("USER_ALREADY_DELETED");
+    }
+    return prisma.user.update({
+        where: {
+            id,
+        },
+        data: {
+            deletedAt: new Date(),
+        }
+    });
+};
+
 export default {
     getUserList,
     getUserById,
     createUser,
     updateUser,
+    toggleUser,
 };

@@ -127,20 +127,48 @@ const updateUser = async (req: Request<{ id: string }>, res: Response) => {
         if (error instanceof Error) {
             switch (error.message) {
                 case "USER_NOT_FOUND":
-                    res.status(404).json({ message: "사용자를 찾을 수 없습니다."});
+                    res.status(404).json({ message: "사용자를 찾을 수 없습니다." });
                     return;
                 case "ALREADY_EXISTS_USERNAME":
-                    res.status(409).json({ message: "이미 사용 중인 아이디입니다."});
+                    res.status(409).json({ message: "이미 사용 중인 아이디입니다." });
                     return;
                 case "ALREADY_EXISTS_EMAIL":
-                    res.status(409).json({ message: "이미 사용 중인 이메일입니다."});
+                    res.status(409).json({ message: "이미 사용 중인 이메일입니다." });
                     return;
                 case "ALREADY_EXISTS_NICKNAME":
-                    res.status(409).json({ message: "이미 사용 중인 닉네임입니다."});
+                    res.status(409).json({ message: "이미 사용 중인 닉네임입니다." });
                     return;
             }
         }
-        res.status(500).json({ message: "서버 에러가 발생했습니다."});
+        res.status(500).json({ message: "서버 에러가 발생했습니다." });
+    }
+};
+
+// Type 옆에 <>를 붙이는 건 "Generic Type"이라고 함
+const toggleUser = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(400).json({ message: "유효하지 않은 사용자 ID 입니다." });
+        }
+
+        const deletedUser = await adminUserService.toggleUser(id);
+        res.status(200).json({
+            message: "사용자가 성공적으로 삭제되었습니다.",
+            data: deletedUser,
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "USER_NOT_FOUND") {
+                res.status(400).json({ message: "유저를 찾을 수 없습니다." });
+                return;
+            }
+            if (error.message === "ALREADY_EXISTS_USERNAME") {
+                res.status(400).json({ message: "이미 삭제된 유저입니다." });
+                return;
+            }
+        }
+        res.status(500).json({ message: "서버 에러가 발생했습니다." });
     }
 };
 
@@ -149,4 +177,5 @@ export default {
     getUserById,
     createUser,
     updateUser,
+    toggleUser,
 };

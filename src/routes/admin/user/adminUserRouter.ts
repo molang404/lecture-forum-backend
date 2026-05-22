@@ -10,6 +10,6 @@ router.get("/list", adminUserController.getUserList);
 router.post("/create", validate(adminCreateUserSchema), adminUserController.createUser);
 router.patch("/:id", validate(adminUpdateUserSchema), adminUserController.updateUser);
 router.get("/:id", adminUserController.getUserById);
-router.patch("/:id/delete", () => {});
+router.patch("/:id/delete", adminUserController.toggleUser);
 
 export default router;
