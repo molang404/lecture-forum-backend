@@ -2,6 +2,7 @@ import { Router } from "express";
 import adminCategoryController from "../../../controllers/admin/adminCategoryController.ts";
 import { validate } from "../../../middlewares/validate.ts";
 import { adminCreateCategorySchema } from "../../../schemas/admin/category/createCategory.ts";
+import { adminUpdateCategorySchema } from "../../../schemas/admin/category/updateCategory.ts";
 
 const router = Router();
 
@@ -9,5 +10,6 @@ const router = Router();
 router.post("/create", validate(adminCreateCategorySchema), adminCategoryController.createCategory);
 router.get("/list", adminCategoryController.getCategoryList);
 router.patch("/:id/status", adminCategoryController.toggleCategoryStatus);
+router.patch("/id", validate(adminUpdateCategorySchema), adminCategoryController.updateCategory)
 
 export default router;

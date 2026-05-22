@@ -1,5 +1,8 @@
 import prisma from "../../config/prisma.ts";
-import { CategoryCreateInput } from "../../generated/prisma/models/Category.ts";
+import {
+    CategoryCreateInput,
+    CategoryUpdateInput,
+} from "../../generated/prisma/models/Category.ts";
 import { CategoryStatus, Prisma } from "../../generated/prisma/client.ts";
 
 const getCategoryList = async () => {
@@ -51,8 +54,13 @@ const toggleCategoryStatus = async (id: number) => {
         });
 }
 
+const updateCategory = async (id: number, name: CategoryUpdateInput) => {
+
+};
+
 export default {
     getCategoryList,
     createCategory,
     toggleCategoryStatus,
+    updateCategory,
 };

@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import adminCategoryService from "../../services/admin/adminCategoryService.ts";
-import { CategoryCreateInput } from "../../generated/prisma/models/Category.ts";
+import {
+    CategoryCreateInput,
+    CategoryUpdateInput,
+} from "../../generated/prisma/models/Category.ts";
 import { AdminCreateCategoryInputType } from "../../schemas/admin/category/createCategory.ts";
 import {CategoryStatus} from "../../generated/prisma/enums.ts";
+import {AdminUpdateCategoryInputType} from "../../schemas/admin/category/updateCategory.ts";
 
 const getCategoryList = async (req: Request, res: Response) => {
     try {
@@ -70,8 +74,28 @@ const toggleCategoryStatus = async (req: Request<{ id: string }>, res: Response)
     }
 };
 
+const updateCategory = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(400).json({ message: "유효하지 않은 카테고리 ID입니다." });
+            return;
+        }
+
+        const { name }: AdminUpdateCategoryInputType = req.body;
+        const updateData: CategoryUpdateInput = {
+            name,
+        }
+
+        const result = await adminCategoryService.updateCategory(id, updateData);
+    } catch (error) {
+
+    }
+};
+
 export default {
     getCategoryList,
     createCategory,
     toggleCategoryStatus,
+    updateCategory,
 };
