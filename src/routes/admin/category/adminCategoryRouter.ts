@@ -10,6 +10,6 @@ const router = Router();
 router.post("/create", validate(adminCreateCategorySchema), adminCategoryController.createCategory);
 router.get("/list", adminCategoryController.getCategoryList);
 router.patch("/:id/status", adminCategoryController.toggleCategoryStatus);
-router.patch("/id", validate(adminUpdateCategorySchema), adminCategoryController.updateCategory)
+router.patch("/:id", validate(adminUpdateCategorySchema), adminCategoryController.updateCategory);
 
 export default router;

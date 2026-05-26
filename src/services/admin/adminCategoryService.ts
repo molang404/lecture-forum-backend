@@ -55,7 +55,25 @@ const toggleCategoryStatus = async (id: number) => {
 }
 
 const updateCategory = async (id: number, name: CategoryUpdateInput) => {
+    try {
+        return prisma.category.update({
+            where: {
+                id,
+            },
+            data: name,
+        });
+    } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError) {
+            if (error.code === "P2002") {
+                throw new Error("ALREADY_EXISTS_CATEGORY_NAME");
+            }
+            if (error.code === "P2025") {
+                throw new Error("CATEGORY_NOT_FOUND");
+            }
+        }
 
+        throw error;
+    }
 };
 
 export default {
