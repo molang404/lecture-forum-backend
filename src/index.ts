@@ -3,6 +3,7 @@ import express from "express";
 import userRouter from "./routes/userRouter.ts";
 import cors from "cors";
 import adminRouter from "./routes/admin/adminRouter.ts";
+import categoryRouter from "./routes/categoryRouter.ts";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 프론트앤드가 하는 요청(Request)에 대하여 경로 Routing 등록
 app.use("/user", userRouter);
+app.use("category", categoryRouter);
 app.use("/admin", adminRouter);
 
 app.listen(PORT, () => {
