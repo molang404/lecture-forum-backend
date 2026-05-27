@@ -15,6 +15,20 @@ const getCategoryList = async () => {
     });
 };
 
+const getCategoryById = async (id: number) => {
+    const category = prisma.category.findUnique({
+       where: {
+           id,
+       }
+    });
+
+    if (!category) {
+        throw new Error("CATEGORY_NOT_FOUND");
+    }
+
+    return category;
+}
+
 const createCategory = async (input: CategoryCreateInput) => {
     try {
         return prisma.category.create({
@@ -78,6 +92,7 @@ const updateCategory = async (id: number, name: CategoryUpdateInput) => {
 
 export default {
     getCategoryList,
+    getCategoryById,
     createCategory,
     toggleCategoryStatus,
     updateCategory,

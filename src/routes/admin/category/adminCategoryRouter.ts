@@ -11,5 +11,6 @@ router.post("/create", validate(adminCreateCategorySchema), adminCategoryControl
 router.get("/list", adminCategoryController.getCategoryList);
 router.patch("/:id/status", adminCategoryController.toggleCategoryStatus);
 router.patch("/:id", validate(adminUpdateCategorySchema), adminCategoryController.updateCategory);
+router.get("/:id", adminCategoryController.getCategoryById);
 
 export default router;
