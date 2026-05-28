@@ -1,4 +1,5 @@
 import prisma from "../config/prisma.ts";
+import { PostCreateInput } from "../generated/prisma/models/Post.ts";
 
 const getPostsByCategory = async (categoryId: number, page: number, size: number) => {
     const skip = (page - 1) * size;
@@ -42,6 +43,14 @@ const getPostsByCategory = async (categoryId: number, page: number, size: number
     };
 };
 
+const createPost = async (postData: PostCreateInput) => {
+    // INSERT 쿼리를 전송
+    return prisma.post.create({
+        data: postData,
+    });
+}
+
 export default {
     getPostsByCategory,
+    createPost,
 };
