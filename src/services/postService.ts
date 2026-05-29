@@ -43,14 +43,35 @@ const getPostsByCategory = async (categoryId: number, page: number, size: number
     };
 };
 
+const getPostById = async (postId: number) => {
+    const post = await prisma.post.findUnique({
+        where: {
+            id: postId,
+            deletedAt: null,
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    nickname: true,
+                    email: true,
+                },
+            },
+        },
+    });
+
+    return post;
+};
+
 const createPost = async (postData: PostCreateInput) => {
     // INSERT 쿼리를 전송
     return prisma.post.create({
         data: postData,
     });
-}
+};
 
 export default {
     getPostsByCategory,
     createPost,
+    getPostById,
 };
