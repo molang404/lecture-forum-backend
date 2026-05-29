@@ -43,7 +43,8 @@ const getPostsByCategory = async (categoryId: number, page: number, size: number
     };
 };
 
-const getPostById = async (postId: number) => {
+const getPostById = async (postId: number, userId?: number) => {
+    // SELECT를 했는데 자료가 검색이 안되면, 어차피 post라는 변수엔 null임
     const post = await prisma.post.findUnique({
         where: {
             id: postId,
@@ -60,7 +61,55 @@ const getPostById = async (postId: number) => {
         },
     });
 
-    return post;
+    if (!post) {
+        // 이 아래쪽으로 진행을 못하도록 막기 위해, return을 쳐줌
+        return null;
+    }
+
+    // 이 글의 투표에 대한 내용을 불러와야 함
+    // 왜? 그걸 post에서 검색해올 때 votes를 쓰면 되지 않나? 라고 할 수 있는데
+    // 이렇게 votes에 vote 테이블에 있는 정보를 덧붙이면(JOIN) 하면
+    // 누가, 몇 번에, 투표했는지 정보가 다 노출됨
+    // 우리가 필요한 정보는 1번에 몇 명, 2번에 몇 명 투표했는지만 알면 됨
+    // 누군지는 필요없음
+
+    const option1Count = await prisma.vote.count({
+        where: {
+            postId: postId,
+            option: 1,
+        },
+    });
+    const option2Count = await prisma.vote.count({
+        where: {
+            postId: postId,
+            option: 2,
+        },
+    });
+
+    // 지금 요청을 한 이 사람이 이 글에 대해 투표를 했는지 안 했는지
+    let hasVoted = false;
+    if (userId) {
+        // finedFirst는 조건에 맞는 첫번째 데이터를 찾음
+        const myVote = await prisma.vote.findFirst({
+            where: {
+                userId: userId,
+                postId: postId,
+            },
+        });
+
+        if (myVote) {
+            hasVoted = true;
+        }
+    }
+    return {
+        ...post,
+        vote: {
+            option1Count,
+            option2Count,
+            totalCount: option1Count + option2Count,
+            hasVoted,
+        },
+    };
 };
 
 const createPost = async (postData: PostCreateInput) => {
