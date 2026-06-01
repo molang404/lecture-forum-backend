@@ -29,6 +29,24 @@ const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Res
     }
 };
 
+// 컨트롤러는 기본적으로 Express에서 제공해주는 Request와 Response를 사용해야 했던 것
+// 그 규칙 안에 Request에 동적 라우팅을 통해 주소값을 가져오려면 Generic인 Request<{ id: string }>
+// ->
+// 우리는 미들웨어를 통해, req라고 하는 요청 내용이 담기는 박스에 req.user 항목을 집어넣기로 한 것
+// 그렇기 때문에 AuthRequest라고, Request 타입을 상속받은 것으로 교체한 상황
+//   =
+// 이렇게 했더니, 우리가 만든 AuthRequest는 Generic이 아니라서 동적 라우팅을 받을 수가 없음
+// 이걸 어떻게든 해결 해야 된다면?
+// GET 방식으로 받게끔 디자인 했기 때문에 동적 라우팅을 했던 것.
+// POST 방식으로 하면 req.body를 쓸 수 있게 됨
+// GET 방식은 조회할 때 쓰고, POST는 생성할 때 쓰고, PATCH와 PUT은 수정할 때 쓰고, DELETE는 삭제할 때 쓰고
+// 느슨하게 적용해도 됨 => 이렇게 나눈 것을 백앤드와 프론트앤드가 합의만 한다면
+
+// POST 방식으로 교체하면 문제 해결이 가능하지만,
+// GET 방식을 고수하여 정석적으로 해결을 하려 한다면, 우리가 만든 AuthRequest가 인터페이스가
+// Generic을 쓸 수 있도록 고쳐야 함
+
+
 const getPostById = async (req: AuthRequest<{ id: string }>, res: Response) => {
     // 원래, 글 내용 조회라는 기능엔 "조회하는 사람이 누군가"는 중요하지 않았음"
     // 근데 "조회하는 사람"이 투표를 했나 안 했나를 알기 위해서는 "그 사람"이 누군가를 알아야 함
