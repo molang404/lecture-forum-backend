@@ -6,6 +6,7 @@ import { validate } from "../middlewares/validate.ts";
 
 const router = Router();
 
-router.post("create", authenticate, validate(createReplySchema), replyController.createReply);
+router.get("/:postId", replyController.getRepliesByPostId);
+router.post("/create", authenticate, validate(createReplySchema), replyController.createReply);
 
 export default router;
