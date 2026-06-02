@@ -168,7 +168,7 @@ const cancelVotePost = async (req: AuthRequest<{ postId: string }>, res: Respons
     // controller에서는 밖으로 데이터를 출력시키는 최전방에 해당
     // -> 무조건 try - catch 문으로 묶어야 함
     try {
-        const postId = Number(req.params);
+        const postId = Number(req.params.postId);
         if (isNaN(postId)) {
             res.status(400).json({
                 message: "유효하지 않은 게시물 ID입니다.",
