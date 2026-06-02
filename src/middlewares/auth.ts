@@ -88,7 +88,11 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     }
 };
 
-export const checkUser = async (req: AuthRequest<{ id: string }>, res: Response, next: NextFunction) => {
+export const checkUser = async (
+    req: AuthRequest<{ id: string }>,
+    res: Response,
+    next: NextFunction,
+) => {
     try {
         const authHeader = req.headers.authorization;
 

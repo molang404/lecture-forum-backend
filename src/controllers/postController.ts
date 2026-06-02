@@ -3,6 +3,7 @@ import postService from "../services/postService.ts";
 import { CreatePostInputType } from "../schemas/post/createPostSchema.ts";
 import { PostCreateInput } from "../generated/prisma/models/Post.ts";
 import { AuthRequest } from "../middlewares/auth.ts";
+import { VotePostInputType } from "../schemas/post/votePostSchema.ts";
 
 const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Response) => {
     try {
@@ -28,6 +29,23 @@ const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Res
         });
     }
 };
+
+// 컨트롤러는 기본적으로 Express에서 제공해주는 타입인 Request와 Response를 사용해야 했던 것
+// 그 규칙 안에 Request에 동적 라우팅을 통해 주소값을 가져오려면 Generic인 Request<{ id: string }>
+//  +
+// 우리는 미들웨어를 통해, req라고 하는 요청 내용가 담기는 박스에 req.user 항목을 집어넣기로 한 것
+// 그렇기 때문에 AuthRequest라고, Request 타입을 상속받은 것으로 교체할 생각
+//   =
+// 이렇게 했더니, 우리가 만든 AuthRequest는 Generic이 아니라서 동적 라우팅을 받을 수가 없네?
+// 이걸 어떻게든 해결을 해야 된다면?
+// GET 방식으로 받게끔 디자인 했기 때문에 동적 라우팅을 썼던 것.
+// POST 방식으로 하면 req.body를 쓸 수 있게됨
+// GET 방식은 조회를 할 떄 쓰고, POST는 생성할 때 쓰고, PATCH와 PUT은 수정할 때 쓰고, DELETE는 지울 때 쓰고
+// 느슨하게 적용을 해도 됩니다. => 이렇게 나눈 것은 백엔드와 프론트엔드가 합의하면 어겨도 됨
+
+// POST 방식으로 교체하면 문제 해결이 가능하지만,
+// GET 방식을 고수하여 정석적으로 해결을 하려 한다면, 우리가 만든 AuthRequest 인터페이스가
+// 부모 인터페이스인 Request의 제네릭을 수용할 수 있도록 고쳐야 함
 
 const getPostById = async (req: AuthRequest<{ id: string }>, res: Response) => {
     // 원래, 글 내용 조회라는 기능엔 "조회하는 사람이 누군가"는 중요하지 않았음"
@@ -97,8 +115,45 @@ const createPost = async (req: AuthRequest, res: Response) => {
     }
 };
 
+const votePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
+    try {
+        const postId = parseInt(req.params.id, 10);
+        if (isNaN(postId)) {
+            return res.status(400).json({ message: "유효하지 않은 게시글 ID입니다." });
+        }
+
+        const { option }: VotePostInputType = req.body;
+
+        if (!req.user) {
+            return res.status(401).json({ message: "로그인이 필요한 서비스입니다." });
+        }
+        const userId = req.user.id;
+
+        await postService.votePost(postId, userId, option);
+
+        res.status(200).json({
+            message: "소중한 한 표가 전황에 반영되었습니다!",
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "NOT_FOUND") {
+                return res.status(404).json({ message: "존재하지 않거나 삭제된 게시글입니다." });
+            }
+            if (error.message === "NOT_VOTABLE") {
+                return res.status(400).json({ message: "투표가 활성화되지 않은 게시글입니다." });
+            }
+            if (error.message === "ALREADY_VOTED") {
+                return res.status(409).json({ message: "이미 투표에 참여하셨습니다." });
+            }
+        }
+        console.error(error);
+        res.status(500).json({ message: "투표 처리 중 서버 에러가 발생했습니다." });
+    }
+};
+
 export default {
     getPostsByCategory,
     getPostById,
     createPost,
+    votePost,
 };
