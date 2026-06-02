@@ -5,6 +5,7 @@ import cors from "cors";
 import adminRouter from "./routes/admin/adminRouter.ts";
 import categoryRouter from "./routes/categoryRouter.ts";
 import postRouter from "./routes/postRouter.ts";
+import replyRouter from "./routes/replyRouter.ts";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/user", userRouter);
 app.use("/category", categoryRouter);
 app.use("/post", postRouter);
+app.use("/reply", replyRouter);
 app.use("/admin", adminRouter);
 
 app.listen(PORT, () => {
