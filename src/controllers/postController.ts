@@ -115,39 +115,89 @@ const createPost = async (req: AuthRequest, res: Response) => {
     }
 };
 
-const votePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
+export const votePost = async (req: AuthRequest<{ postId: string }>, res: Response) => {
     try {
-        const postId = parseInt(req.params.id, 10);
+        // 투표가 이루어지는 글번호(ID)   => 동적 라우팅을 통해 주소 => AuthRequest에 제네릭
+        // 투표를 한 사람의 ID          => req.user => req라는 요청 내용 박스의 모양이 바뀌어야 함
+        // 어디에 투표를 했는지          => req.body
+
+        const postId = Number(req.params.postId);
         if (isNaN(postId)) {
-            return res.status(400).json({ message: "유효하지 않은 게시글 ID입니다." });
+            res.status(400).json({ message: "유효하지 않은 게시물 ID 입니다." });
+            return;
         }
 
-        const { option }: VotePostInputType = req.body;
-
+        // authenticate라는 미들웨어로 사용자가 무조건 존재해야 여기에 도달한다고 제한을 뒀지만,
+        // 그것은 내가 알 뿐, 이 파일만 보고 있는 Typescript 엔진은 모름
         if (!req.user) {
-            return res.status(401).json({ message: "로그인이 필요한 서비스입니다." });
+            res.status(401).json({ message: "인증되지 않은 사용자입니다." });
+            return;
         }
         const userId = req.user.id;
 
-        await postService.votePost(postId, userId, option);
+        const { option }: VotePostInputType = req.body;
 
-        res.status(200).json({
-            message: "소중한 한 표가 전황에 반영되었습니다!",
-        });
+        await postService.votePost(postId, userId, option);
+        res.status(200).json({ message: "투표 결과가 정상적으로 저장되었습니다." });
     } catch (error) {
         if (error instanceof Error) {
             if (error.message === "NOT_FOUND") {
-                return res.status(404).json({ message: "존재하지 않거나 삭제된 게시글입니다." });
+                res.status(404).json({ message: "존재하지 않거나 삭제된 게시물입니다." });
+                return;
             }
             if (error.message === "NOT_VOTABLE") {
-                return res.status(400).json({ message: "투표가 활성화되지 않은 게시글입니다." });
+                res.status(400).json({ message: "투표가 활성화되지 않은 게시물입니다." });
+                return;
             }
             if (error.message === "ALREADY_VOTED") {
-                return res.status(409).json({ message: "이미 투표에 참여하셨습니다." });
+                res.status(409).json({ message: "이미 투표에 참여하셨습니다." });
+                return;
             }
         }
-        console.error(error);
+        console.log(error);
         res.status(500).json({ message: "투표 처리 중 서버 에러가 발생했습니다." });
+    }
+};
+
+const cancelVotePost = async (req: AuthRequest<{ postId: string }>, res: Response) => {
+    // 동적 라우팅을 통해 postId 즉, 취소해야 하는 투표가 이루어진 글 ID
+    // 쿼리스트링은 X
+    // req.body X
+    // req.user 가 필요한데 이걸 뽑아내려면 미들웨어 통과 필요
+
+    // controller에서는 밖으로 데이터를 출력시키는 최전방에 해당
+    // -> 무조건 try - catch 문으로 묶어야 함
+    try {
+        const postId = Number(req.params);
+        if (isNaN(postId)) {
+            res.status(400).json({
+                message: "유효하지 않은 게시물 ID입니다.",
+            });
+            return;
+        }
+
+        if (!req.user) {
+            res.status(401).json({
+                message: "로그인이 필요한 서비스입니다.",
+            });
+            return;
+        }
+        const userId = req.user.id;
+
+        // "이 사람"이 "저 글"에 투표한 내용을 취소 시켜줘
+        await postService.cancelVotePost(postId, userId);
+        res.status(200).json({
+            message: "투표가 취소되었습니다.",
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "NOT_VOTED") {
+                res.status(404).json({ message: "취소할 투표 내용이 존재하지 않습니다." });
+                return;
+            }
+        }
+        console.log(error);
+        res.status(500).json({ message: "투표 취소 중 서버 에러가 발생했습니다." });
     }
 };
 
@@ -156,4 +206,5 @@ export default {
     getPostById,
     createPost,
     votePost,
+    cancelVotePost,
 };

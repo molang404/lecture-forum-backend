@@ -156,9 +156,31 @@ const votePost = async (postId: number, userId: number, option: number) => {
     });
 };
 
+const cancelVotePost = async (postId: number, userId: number) => {
+    // service는 에러를 어디에서 처리할지를 내가 결정해서
+    // try - catch 를 선택적으로 사용가능
+    const existVote = await prisma.vote.findUnique({
+        where: {
+            userId_postId: { userId, postId },
+        },
+    });
+    if (!existVote) {
+        throw new Error("NOT_VOTED");
+    }
+
+    // 실제 삭제가 이루어져야 함
+    await prisma.vote.delete({
+        where: {
+            userId_postId: { userId, postId },
+        },
+    });
+    return;
+};
+
 export default {
     getPostsByCategory,
     createPost,
     getPostById,
     votePost,
+    cancelVotePost,
 };
