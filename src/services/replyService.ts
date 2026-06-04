@@ -80,7 +80,7 @@ const deleteReply = async (id: number, userId: number) => {
     if (reply.userId !== userId) {
         throw new Error("FORBIDDEN");
     }
-    prisma.reply.delete({
+    await prisma.reply.delete({
         where: {
             id,
         },
