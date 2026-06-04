@@ -15,7 +15,7 @@ const getRepliesByPostId = async (postId: number, page: number, size: number) =>
         },
         take: size,
         skip,
-        orderBy: { id: "asc" },
+        orderBy: { id: "desc" },
         include: {
             user: {
                 select: {
