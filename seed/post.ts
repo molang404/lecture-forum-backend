@@ -63,24 +63,26 @@ async function seedPosts() {
         const users = await prisma.user.findMany({
             where: {
                 deletedAt: null,
-            }
+            },
         });
 
         if (categories.length === 0) {
-            console.log("활성화된 카테고리가 없습니다. 시딩을 중단합니다.")
+            console.log("활성화된 카테고리가 없습니다. 시딩을 중단합니다.");
             return;
         }
         if (users.length === 0) {
-            console.log("작성자로 지정할 유저가 없습니다. 시딩을 중단합니다.")
+            console.log("작성자로 지정할 유저가 없습니다. 시딩을 중단합니다.");
             return;
         }
 
         const postsPerCategory = 30;
 
-        for (const category of categories) {      // categories를 순회시키는 역할
-            for (let i = 0; i < postsPerCategory; i++) {     // 글 등록 역할 (0 ~ 30)
+        for (const category of categories) {
+            // categories를 순회시키는 역할
+            for (let i = 0; i < postsPerCategory; i++) {
+                // 글 등록 역할 (0 ~ 30)
                 const topic = mockPostList[Math.floor(Math.random() * mockPostList.length)]; // 쓸 글 내용을 랜덤 선택
-                const user = users[Math.floor(Math.random() * users.length)];  // 작성자로 등록할 사용자를 랜덤 선택
+                const user = users[Math.floor(Math.random() * users.length)]; // 작성자로 등록할 사용자를 랜덤 선택
 
                 if (!topic) {
                     return null;
@@ -103,12 +105,22 @@ async function seedPosts() {
                     user: { connect: { id: user.id } },
                 };
 
-                await postService.createPost(dummyData);
-                console.log(`[${i}/${postsPerCategory} : 카테고리ID(${category.id})] 게시물 등록 성공`);
+                try {
+                    await postService.createPost(dummyData);
+                    console.log(
+                        `[${i}/${postsPerCategory} : 카테고리ID(${category.id})] 게시물 등록 성공`,
+                    );
+                } catch (error) {
+                    console.log(
+                        `[${i}/${postsPerCategory} : 카테고리ID(${category.id})] 게시물 등록 실패`,
+                    );
+                }
             }
         }
     } catch (error) {
         console.log("시딩 작업 중 오류가 발생되었습니다.", error);
+    } finally {
+        await prisma.$disconnect(); // 데이터베이스 연결을 끊는 메서드
     }
 }
 
