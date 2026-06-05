@@ -135,10 +135,10 @@ model Reply {
   updatedAt DateTime @updatedAt
   content   String   @db.Text
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  postId    Int
-  post      Post     @relation(fields: [postId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+  postId Int
+  post   Post @relation(fields: [postId], references: [id])
 
   @@index([userId])
   @@index([postId])
@@ -149,3 +149,12 @@ model Reply {
 // 즉, user와 post라는 항목의 타입인 객체는 데이터베이스에 들어갈 수 없음
 // -> user와 post는 userId값을 자기고 User 테이블에서 데이터를 검색해와서 Prisma가 넣어주는(JOIN) 항목임
 // 데이터베이스에는 존재 X, 가상칼럼
+
+model Notice {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  title     String
+  content   String   @db.Text
+  // Post에는 글쓴이가 필요하니까 User와 관계를 맺지만, Notice는 관계를 맺지 않아도 됨
+}
