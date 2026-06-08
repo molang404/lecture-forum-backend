@@ -19,7 +19,7 @@ const getNoticeById = async (req: Request<{ noticeId: string }>, res: Response) 
     } catch (error) {
         console.log(error);
         res.status(500).json({
-            message: "공지사랑 목록 조회 중 서버 에러가 발생되었습니다.",
+            message: "공지사항 목록 조회 중 서버 에러가 발생되었습니다.",
         });
     }
 };
@@ -32,15 +32,18 @@ const getNoticeList = async (req: Request, res: Response) => {
         const result = await noticeService.getNoticeList(page, size);
 
         res.status(200).json({
-            page,
-            size,
-            total: result.total,
-            list: result.list,
+            message: "공지사항 목록 조회 성공",
+            data: {
+                page,
+                size,
+                total: result.total,
+                list: result.list,
+            },
         });
     } catch (error) {
         console.log(error);
         res.status(500).json({
-            message: "공지사랑 목록 조회 중 서버 에러가 발생했습니다.",
+            message: "공지사항 목록 조회 중 서버 에러가 발생했습니다.",
         });
     }
 };

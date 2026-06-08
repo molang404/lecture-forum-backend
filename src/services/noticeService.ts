@@ -19,7 +19,7 @@ const getNoticeList = async (page: number, size: number) => {
     // skip은 데이터를 지나치는 갯수를 뜻함
     // (내가 3페이지를 보고 싶으니, 30개 데이터 이후의 15개를 가져와라)
 
-    const list = prisma.notice.findMany({
+    const list = await prisma.notice.findMany({
         orderBy: { id: "desc" },
         skip: (page - 1) * size,
         take: size,
