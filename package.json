@@ -12,7 +12,8 @@
         "prisma:generate": "prisma generate",
         "seed:post": "tsx seed/post.ts",
         "seed:reply": "tsx seed/reply.ts",
-        "seed:vote": "tsx seed/vote.ts"
+        "seed:vote": "tsx seed/vote.ts",
+        "seed:notice": "tsx seed/notice.ts"
     },
     "keywords": [],
     "author": "",
