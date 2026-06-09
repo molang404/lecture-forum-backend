@@ -7,6 +7,6 @@ const router = Router();
 
 router.post("/create", validate(noticeSchema), adminNoticeController.createNotice);
 router.patch("/:noticeId", validate(noticeSchema), adminNoticeController.updateNotice);
-router.delete("/noticeId", adminNoticeController.deleteNotice);
+router.delete("/:noticeId", adminNoticeController.deleteNotice);
 
 export default router;
