@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.ts";
-import { PostCreateInput } from "../generated/prisma/models/Post.ts";
+import { PostCreateInput, PostUpdateInput } from "../generated/prisma/models/Post.ts";
 
 const getPostsByCategory = async (categoryId: number, page: number, size: number) => {
     const skip = (page - 1) * size;
@@ -119,8 +119,27 @@ const createPost = async (postData: PostCreateInput) => {
     });
 };
 
+const updatePost = async (postId: number, postData: PostUpdateInput) => {
+    return prisma.post.update({
+        where: {
+            id: postId,
+        },
+        data: postData,
+    });
+};
+
+const deletePost = async (postId: number) => {
+    return prisma.post.delete({
+        where: {
+            id: postId,
+        },
+    });
+};
+
 export default {
     getPostsByCategory,
     createPost,
+    updatePost,
     getPostById,
+    deletePost,
 };

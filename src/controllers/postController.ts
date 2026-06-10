@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import postService from "../services/postService.ts";
 import { CreatePostInputType } from "../schemas/post/createPostSchema.ts";
-import { PostCreateInput } from "../generated/prisma/models/Post.ts";
+import { PostCreateInput, PostUpdateInput } from "../generated/prisma/models/Post.ts";
 import { AuthRequest } from "../middlewares/auth.ts";
+import { UpdatePostInputType } from "../schemas/post/updatePostSchema.ts";
 
 const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Response) => {
     try {
@@ -115,8 +116,108 @@ const createPost = async (req: AuthRequest, res: Response) => {
     }
 };
 
+const updatePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
+    try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        res.status(400).json({
+            message: "유효하지 않은 게시글 ID입니다."
+        })
+    }
+
+    if (!req.user) {
+        res.status(401).json({
+            message: "로그인이 필요한 서비스입니다.",
+        });
+        return;
+    }
+    const userId = req.user.id;
+
+    const post = await postService.getPostById(id);
+
+    if (!post) {
+        res.status(404).json({
+            message: "게시글을 찾을 수 없습니다.",
+        });
+        return;
+    }
+
+    if (userId !== post.userId) {
+        res.status(403).json({
+            message: "게시글 수정 권한이 없습니다.",
+        });
+    }
+
+    if (post.option1Text || post.option2Text) {
+        res.status(403).json({
+            message: "이미 투표를 올린 게시글은 수정할 수 없습니다."
+        });
+    }
+    const { title, content, option1Text, option2Text }: UpdatePostInputType = req.body;
+    const postUpdateData: PostUpdateInput = {
+        title,
+        content,
+        user: { connect: { id: userId } },
+        option1Text: option1Text ?? null,
+        option2Text: option2Text ?? null,
+    };
+
+    const newPost = await postService.updatePost(id, postUpdateData);
+        res.status(201).json({
+            message: "게시글이 성공적으로 작성되었습니다.",
+            data: newPost,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "게시글 작성 중 서버 에러가 발생되었습니다." });
+    }
+};
+
+const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
+    try {
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        res.status(400).json({
+            message: "유효하지 않은 게시글 ID입니다.",
+        });
+    }
+
+    if (!req.user) {
+        res.status(401).json({
+            message: "로그인이 필요한 서비스입니다.",
+        });
+        return;
+    }
+    const userId = req.user.id;
+
+    const post = await postService.getPostById(id);
+
+    if (!post) {
+        res.status(404).json({
+            message: "게시글을 찾을 수 없습니다.",
+        });
+        return;
+    }
+
+    if (userId !== post.userId) {
+        res.status(403).json({
+            message: "게시글 삭제 권한이 없습니다.",
+        });
+    }
+    await postService.deletePost(id);
+    res.status(201).json({
+        message: "게시글이 성공적으로 삭제 되었습니다.",
+    });
+} catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "게시글 삭제 중 서버 에러가 발생되었습니다." });
+}
+};
+
 export default {
     getPostsByCategory,
     getPostById,
     createPost,
+    updatePost,
+    deletePost,
 };

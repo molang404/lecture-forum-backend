@@ -9,5 +9,7 @@ const router = Router();
 router.get("/list/:categoryId", postController.getPostsByCategory);
 router.get("/:id", checkUser, postController.getPostById);
 router.post("/create", authenticate, validate(createPostSchema), postController.createPost);
+router.patch("/:id", authenticate, validate(createPostSchema), postController.updatePost);
+router.delete("/:id", authenticate, postController.deletePost);
 
 export default router;
