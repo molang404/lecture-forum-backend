@@ -7,6 +7,7 @@ import categoryRouter from "./routes/categoryRouter.ts";
 import postRouter from "./routes/postRouter.ts";
 import replyRouter from "./routes/replyRouter.ts";
 import noticeRouter from "./routes/noticeRouter.ts";
+import inquiryRouter from "./routes/inquiryRouter.ts";
 
 dotenv.config();
 
@@ -20,7 +21,7 @@ app.use(
     cors({
         origin: "http://localhost:5173",
         credentials: true,
-    })
+    }),
 );
 
 // express.json() : 요청(Request)의 본문(body)에서 JSON 데이터를 객체로 파싱하여 request.body에 저장
@@ -36,6 +37,7 @@ app.use("/post", postRouter);
 app.use("/reply", replyRouter);
 app.use("/notice", noticeRouter);
 app.use("/admin", adminRouter);
+app.use("/inquiry", inquiryRouter);
 
 app.listen(PORT, () => {
     console.log(`Server listening on : http://localhost:${PORT}`);

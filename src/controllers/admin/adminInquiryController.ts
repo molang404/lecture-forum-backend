@@ -65,7 +65,7 @@ const answerInquiry = async (req: Request<{ inquiryId: string }>, res: Response)
         const { answer }: InquiryAnswerInputType = req.body;
 
         const result = await inquiryService.answerInquiry(inquiryId, answer);
-        res.status(200).json({
+        res.status(201).json({
             message: "문의 답변 등록 성공",
             data: result,
         });
@@ -113,8 +113,8 @@ const deleteInquiry = async (req: Request<{ inquiryId: string }>, res: Response)
 
         console.log(error);
         res.status(500).json({
-            message: "문의 삭제 작업 중 서버 에러가 발생되었습니다."
-        })
+            message: "문의 삭제 작업 중 서버 에러가 발생되었습니다.",
+        });
     }
 };
 
