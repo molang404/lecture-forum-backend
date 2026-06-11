@@ -4,6 +4,7 @@ import { CreatePostInputType } from "../schemas/post/createPostSchema.ts";
 import { PostCreateInput, PostUpdateInput } from "../generated/prisma/models/Post.ts";
 import { AuthRequest } from "../middlewares/auth.ts";
 import { UpdatePostInputType } from "../schemas/post/updatePostSchema.ts";
+import { VotePostInputType } from "../schemas/post/votePostSchema.ts";
 
 const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Response) => {
     try {
@@ -46,7 +47,6 @@ const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Res
 // POST 방식으로 교체하면 문제 해결이 가능하지만,
 // GET 방식을 고수하여 정석적으로 해결을 하려 한다면, 우리가 만든 AuthRequest가 인터페이스가
 // Generic을 쓸 수 있도록 고쳐야 함
-
 
 const getPostById = async (req: AuthRequest<{ id: string }>, res: Response) => {
     // 원래, 글 내용 조회라는 기능엔 "조회하는 사람이 누군가"는 중요하지 않았음"
@@ -116,108 +116,157 @@ const createPost = async (req: AuthRequest, res: Response) => {
     }
 };
 
+const votePost = async (req: AuthRequest<{ postId: string }>, res: Response) => {
+    try {
+        const postId = Number(req.params.postId);
+        if (isNaN(postId)) {
+            res.status(400).json({
+                message: "유효하지 않은 게시글 ID입니다.",
+            });
+            return;
+        }
+
+        if (!req.user) {
+            res.status(401).json({
+                message: "로그인이 필요한 서비스입니다.",
+            });
+            return;
+        }
+        const userId = req.user.id;
+
+        const { option }: VotePostInputType = req.body;
+
+        await postService.votePost(postId, userId, option);
+        res.status(200).json({
+            message: "투표결과가 정상적으로 저장되었습니다.",
+        });
+    } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "NOT_FOUND") {
+                res.status(404).json({ message: "존재하지 않거나 삭제된 게시물입니다." });
+                return;
+            }
+            if (error.message === "NOT_VOTABLE") {
+                res.status(400).json({
+                    message: "투표가 활성화 되지 않은 게시물입니다.",
+                });
+                return;
+            }
+            if (error.message === "ALREADY_VOTED") {
+                res.status(409).json({ message: "이미 투표에 참여하셨습니다." });
+                return;
+            }
+        }
+        console.log(error);
+        res.status(500).json({
+            message: "투표 처리 중 서버 에러가 발생했습니다.",
+        });
+    }
+};
+
 const updatePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
     try {
-    const id = Number(req.params.id);
-    if (isNaN(id)) {
-        res.status(400).json({
-            message: "유효하지 않은 게시글 ID입니다."
-        })
-    }
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(404).json({
+                message: "유효하지 않은 게시글 ID입니다.",
+            });
+        }
 
-    if (!req.user) {
-        res.status(401).json({
-            message: "로그인이 필요한 서비스입니다.",
-        });
-        return;
-    }
-    const userId = req.user.id;
+        if (!req.user) {
+            res.status(401).json({
+                message: "로그인이 필요한 서비스입니다.",
+            });
+            return;
+        }
+        const userId = req.user.id;
 
-    const post = await postService.getPostById(id);
+        const post = await postService.getPostById(id);
 
-    if (!post) {
-        res.status(404).json({
-            message: "게시글을 찾을 수 없습니다.",
-        });
-        return;
-    }
+        if (!post) {
+            res.status(404).json({
+                message: "게시글을 찾을 수 없습니다.",
+            });
+            return;
+        }
 
-    if (userId !== post.userId) {
-        res.status(403).json({
-            message: "게시글 수정 권한이 없습니다.",
-        });
-    }
+        if (userId !== post.userId) {
+            res.status(403).json({
+                message: "게시글 수정 권한이 없습니다.",
+            });
+        }
 
-    if (post.option1Text || post.option2Text) {
-        res.status(403).json({
-            message: "이미 투표를 올린 게시글은 수정할 수 없습니다."
-        });
-    }
-    const { title, content, option1Text, option2Text }: UpdatePostInputType = req.body;
-    const postUpdateData: PostUpdateInput = {
-        title,
-        content,
-        user: { connect: { id: userId } },
-        option1Text: option1Text ?? null,
-        option2Text: option2Text ?? null,
-    };
+        if (post.option1Text || post.option2Text) {
+            res.status(403).json({
+                message: "이미 투표를 올린 게시글은 수정할 수 없습니다.",
+            });
+        }
+        const { title, content, option1Text, option2Text }: UpdatePostInputType = req.body;
+        const postUpdateData: PostUpdateInput = {
+            title,
+            content,
+            user: { connect: { id: userId } },
+            option1Text: option1Text ?? null,
+            option2Text: option2Text ?? null,
+        };
 
-    const newPost = await postService.updatePost(id, postUpdateData);
+        const newPost = await postService.updatePost(id, postUpdateData);
         res.status(201).json({
-            message: "게시글이 성공적으로 작성되었습니다.",
+            message: "게시글이 성공적으로 수정되었습니다.",
             data: newPost,
         });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ message: "게시글 작성 중 서버 에러가 발생되었습니다." });
+        res.status(500).json({ message: "게시글 수정 중 서버 에러가 발생되었습니다." });
     }
 };
 
 const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
     try {
-    const id = Number(req.params.id);
-    if (isNaN(id)) {
-        res.status(400).json({
-            message: "유효하지 않은 게시글 ID입니다.",
-        });
-    }
+        const id = Number(req.params.id);
+        if (isNaN(id)) {
+            res.status(400).json({
+                message: "유효하지 않은 게시글 ID입니다.",
+            });
+        }
 
-    if (!req.user) {
-        res.status(401).json({
-            message: "로그인이 필요한 서비스입니다.",
-        });
-        return;
-    }
-    const userId = req.user.id;
+        if (!req.user) {
+            res.status(401).json({
+                message: "로그인이 필요한 서비스입니다.",
+            });
+            return;
+        }
+        const userId = req.user.id;
 
-    const post = await postService.getPostById(id);
+        const post = await postService.getPostById(id);
 
-    if (!post) {
-        res.status(404).json({
-            message: "게시글을 찾을 수 없습니다.",
-        });
-        return;
-    }
+        if (!post) {
+            res.status(404).json({
+                message: "삭제할 게시글을 찾을 수 없습니다.",
+            });
+            return;
+        }
 
-    if (userId !== post.userId) {
-        res.status(403).json({
-            message: "게시글 삭제 권한이 없습니다.",
+        if (userId !== post.userId) {
+            res.status(403).json({
+                message: "게시글 삭제 권한이 없습니다.",
+            });
+        }
+        await postService.deletePost(id);
+        res.status(201).json({
+            message: "게시글이 성공적으로 삭제 되었습니다.",
         });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "게시글 삭제 중 서버 에러가 발생되었습니다." });
     }
-    await postService.deletePost(id);
-    res.status(201).json({
-        message: "게시글이 성공적으로 삭제 되었습니다.",
-    });
-} catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "게시글 삭제 중 서버 에러가 발생되었습니다." });
-}
 };
 
 export default {
     getPostsByCategory,
     getPostById,
     createPost,
+    votePost,
     updatePost,
     deletePost,
 };

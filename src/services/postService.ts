@@ -119,6 +119,40 @@ const createPost = async (postData: PostCreateInput) => {
     });
 };
 
+const votePost = async (postId: number, userId: number, option: number) => {
+    const post = await prisma.post.findUnique({
+        where: {
+            id: postId,
+            deletedAt: null,
+        },
+    });
+
+    if (!post) {
+        throw new Error("NOT_FOUND");
+    }
+
+    if (!post.option1Text || !post.option2Text) {
+        throw new Error("NOT_VOTABLE");
+    }
+
+    const existingVote = await prisma.vote.findUnique({
+        where: {
+            userId_postId: { userId, postId },
+        },
+    });
+    if (existingVote) {
+        throw new Error("ALREADY_VOTED");
+    }
+
+    return prisma.vote.create({
+        data: {
+            userId,
+            postId,
+            option,
+        },
+    });
+};
+
 const updatePost = async (postId: number, postData: PostUpdateInput) => {
     return prisma.post.update({
         where: {
@@ -129,15 +163,19 @@ const updatePost = async (postId: number, postData: PostUpdateInput) => {
 };
 
 const deletePost = async (postId: number) => {
-    return prisma.post.delete({
+    return prisma.post.update({
         where: {
             id: postId,
+        },
+        data: {
+            deletedAt: new Date(),
         },
     });
 };
 
 export default {
     getPostsByCategory,
+    votePost,
     createPost,
     updatePost,
     getPostById,
