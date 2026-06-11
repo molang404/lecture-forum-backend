@@ -4,12 +4,15 @@ import { validate } from "../middlewares/validate.ts";
 import { createPostSchema } from "../schemas/post/createPostSchema.ts";
 import { authenticate, checkUser } from "../middlewares/auth.ts";
 import { votePostSchema } from "../schemas/post/votePostSchema.ts";
+import { updatePostSchema } from "../schemas/post/updatePostSchema.ts";
 
 const router = Router();
 
 router.get("/list/:categoryId", postController.getPostsByCategory);
 router.get("/:id", checkUser, postController.getPostById);
 router.post("/create", authenticate, validate(createPostSchema), postController.createPost);
+router.patch("/:id", authenticate, validate(updatePostSchema), postController.updatePost);
+router.delete("/:id", authenticate, postController.deletePost);
 router.post("/:postId/vote", validate(votePostSchema), authenticate, postController.votePost);
 router.delete("/:postId/vote", authenticate, postController.cancelVotePost);
 

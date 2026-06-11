@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.ts";
-import { PostCreateInput } from "../generated/prisma/models/Post.ts";
+import { PostCreateInput, PostUpdateInput } from "../generated/prisma/models/Post.ts";
 
 const getPostsByCategory = async (categoryId: number, page: number, size: number) => {
     const skip = (page - 1) * size;
@@ -119,6 +119,26 @@ const createPost = async (postData: PostCreateInput) => {
     });
 };
 
+const updatePost = async (postId: number, postData: PostUpdateInput) => {
+    return prisma.post.update({
+        where: {
+            id: postId,
+        },
+        data: postData,
+    });
+};
+
+const deletePost = async (postId: number) => {
+    return prisma.post.update({
+        where: {
+            id: postId,
+        },
+        data: {
+            deletedAt: new Date(),
+        }
+    });
+};
+
 const votePost = async (postId: number, userId: number, option: number) => {
     // 1. postId의 글이 존재 유무 (소프트삭제도 고려)
     const post = await prisma.post.findFirst({
@@ -181,6 +201,8 @@ export default {
     getPostsByCategory,
     createPost,
     getPostById,
+    updatePost,
+    deletePost,
     votePost,
     cancelVotePost,
 };
