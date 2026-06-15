@@ -144,14 +144,7 @@ const updateUser = async (userId: number, input: UpdateUserInputType) => {
 };
 
 const updatePassword = async (userId: number, prevPw: string, pw: string) => {
-    const user = await prisma.user.findUnique({
-        where: {
-            id: userId,
-        }
-    });
-    if (!user) {
-        throw new Error("USER_NOT_FOUND");
-    }
+    const user = await getUserById(userId);
 
     // prevPw 사용자가 입력한 비밀번호는 평문
     // user.password는 암호화
@@ -180,9 +173,33 @@ const updatePassword = async (userId: number, prevPw: string, pw: string) => {
         },
         data: {
             password: hashedPassword,
-        }
-    })
-}
+        },
+    });
+};
+
+const withdrawUser = async (userId: number, password: string) => {
+    // 사용자가 존재하는지 찾기
+    // 데이터베이스에는 SELECT 구문 - findFirst, findUnique, findMany
+    // findUnique는 where절에 들어갈 수 있는게 unique 칼럼에 대해서만 이기에 무조건 1개 or 0개
+    // findFirst는 where절에 들어가는게 제한 없이, 여러 개의 칼럼이 선택되고, 그 중에 1개
+    const user = await getUserById(userId);
+
+    // 지금 들어온 비밀번호가 DB 상 비밀번호와 같은지 passwordUtil 확인
+    const isPasswordValid = await passwordUtil.verifyPassword(password, user.password);
+    if (!isPasswordValid) {
+        throw new Error("INVALID_PASSWORD");
+    }
+
+    // 사용자 정보에 deletedAt 현재 시간으로 update
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            deletedAt: new Date(),
+        },
+    });
+};
 
 export default {
     createUser,
@@ -190,4 +207,5 @@ export default {
     getUserById,
     updateUser,
     updatePassword,
+    withdrawUser,
 };
