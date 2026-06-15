@@ -201,6 +201,15 @@ const withdrawUser = async (userId: number, password: string) => {
     });
 };
 
+// 회원 탈퇴 된 사용자의 정보는 폐기를 하는 것이 맞음
+// 회원 정보(User)라는 것은 Post, Reply, Inquiry든, 관계를 갖고 있는 다은 테이블이 있기 때문에
+// delete로 진행하지 않고 update로 처리한 것
+// 법적으로도 문제 없고, 우리의 delete를 하지 말아야 된다는 문제를 해결하려면 어떻게 해야 할까
+// 관계에 필요한 id를 제외한 나머지는 NULL로 update
+// 그렇기 때문에 User 테이블에 대한 설계를 할 때부터 그에 대한 고려가 필요
+
+// 이렇게 디자인 하는 곳은 없음
+
 export default {
     createUser,
     login,
