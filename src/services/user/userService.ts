@@ -143,9 +143,51 @@ const updateUser = async (userId: number, input: UpdateUserInputType) => {
     });
 };
 
+const updatePassword = async (userId: number, prevPw: string, pw: string) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+        }
+    });
+    if (!user) {
+        throw new Error("USER_NOT_FOUND");
+    }
+
+    // prevPw 사용자가 입력한 비밀번호는 평문
+    // user.password는 암호화
+    const isPasswordValid = await passwordUtil.verifyPassword(prevPw, user.password);
+    if (!isPasswordValid) {
+        throw new Error("INVALID_PASSWORD");
+    }
+
+    const hashedPassword = await passwordUtil.hashPassword(pw);
+
+    // "지금 현재 비밀번호와 변경하려는 비밀번호가 같습니다" 라는 에러로 튕겨내려면
+    // if (hashedPassword === user.password) {
+    //     throw new Error("SAME_PASSWORD");
+    // }
+
+    // "5게월 전에 변경된 비밀번호 입니다." 라는 에러로 튕겨내려면
+    // 비밀번호 히스토리를 저장하고 있는 테이블을 따로 마련해야 함
+    // 그 비밀번호 히스로리를 모두 findMany로 가져온 뒤
+    // for문을 돌려서 비교, 그 후 시간과 함께 에러 리턴
+    // 구글이 이 방식인데 문제가 되지 않는 이유는
+    // 갖고 있는 비밀번호들이 전부 다 암호화 되어 있는 정보이기 때문
+
+    await prisma.user.update({
+        where: {
+            id: userId,
+        },
+        data: {
+            password: hashedPassword,
+        }
+    })
+}
+
 export default {
     createUser,
     login,
     getUserById,
     updateUser,
+    updatePassword,
 };
