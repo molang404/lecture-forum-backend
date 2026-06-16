@@ -1,10 +1,8 @@
 import { Router } from "express";
-import myController from "../controllers/myController.ts";
-import { authenticate } from "../middlewares/auth.ts";
+import myDashboardController from "../controllers/myDashboardController.ts";
 
 const router = Router();
 
-router.get("/post", authenticate, myController.getMyPost);
-router.get("/reply", authenticate, myController.getMyReply);
+router.get("/summary", myDashboardController.getMyDashboardSummary);
 
 export default router;
