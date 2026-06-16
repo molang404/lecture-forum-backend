@@ -9,10 +9,11 @@ import { updatePostSchema } from "../schemas/post/updatePostSchema.ts";
 const router = Router();
 
 router.get("/list/:categoryId", postController.getPostsByCategory);
+router.get("/recent", postController.getRecentPosts);
 router.get("/:id", checkUser, postController.getPostById);
 router.post("/create", authenticate, validate(createPostSchema), postController.createPost);
 router.patch("/:id", authenticate, validate(updatePostSchema), postController.updatePost);
-router.delete("/:id", authenticate, postController.deletePost);
+router.patch("/:id/private", authenticate, postController.privatePost);
 router.post("/:postId/vote", validate(votePostSchema), authenticate, postController.votePost);
 router.delete("/:postId/vote", authenticate, postController.cancelVotePost);
 

@@ -1,6 +1,33 @@
 import prisma from "../config/prisma.ts";
 import { PostCreateInput, PostUpdateInput } from "../generated/prisma/models/Post.ts";
 
+const getRecentPosts = async () => {
+    return prisma.post.findMany({
+        where: {
+            deletedAt: null,
+        },
+        orderBy: {
+            id: "desc",
+        },
+        take: 20,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    nickname: true,
+                    email: true,
+                },
+            },
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+        },
+    });
+};
+
 const getPostsByCategory = async (categoryId: number, page: number, size: number) => {
     const skip = (page - 1) * size;
 
@@ -128,14 +155,14 @@ const updatePost = async (postId: number, postData: PostUpdateInput) => {
     });
 };
 
-const deletePost = async (postId: number) => {
+const privatePost = async (postId: number) => {
     return prisma.post.update({
         where: {
             id: postId,
         },
         data: {
             deletedAt: new Date(),
-        }
+        },
     });
 };
 
@@ -198,11 +225,12 @@ const cancelVotePost = async (postId: number, userId: number) => {
 };
 
 export default {
+    getRecentPosts,
     getPostsByCategory,
     createPost,
     getPostById,
     updatePost,
-    deletePost,
+    privatePost,
     votePost,
     cancelVotePost,
 };

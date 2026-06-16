@@ -6,6 +6,21 @@ import { AuthRequest } from "../middlewares/auth.ts";
 import { VotePostInputType } from "../schemas/post/votePostSchema.ts";
 import { UpdatePostInputType } from "../schemas/post/updatePostSchema.ts";
 
+const getRecentPosts = async (req: Request, res: Response) => {
+    try {
+        const result = await postService.getRecentPosts();
+        res.status(200).json({
+            message: "최근 게시물 조회에 성공했습니다.",
+            data: result,
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            message: "최근 게시물 조회 중 서버 오류가 발생했습니다.",
+        })
+    }
+}
+
 const getPostsByCategory = async (req: Request<{ categoryId: string }>, res: Response) => {
     try {
         const categoryId = Number(req.params.categoryId);
@@ -173,7 +188,7 @@ const updatePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
     }
 };
 
-const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
+const privatePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
     try {
         const id = Number(req.params.id);
         if (isNaN(id)) {
@@ -190,7 +205,7 @@ const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
         }
         const userId = req.user.id;
 
-        const post = await postService.getPostById(id);
+        const post = await postService.privatePost(id);
 
         if (!post) {
             res.status(404).json({
@@ -204,7 +219,7 @@ const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
                 message: "게시글 삭제 권한이 없습니다.",
             });
         }
-        await postService.deletePost(id);
+        await postService.privatePost(id);
         res.status(201).json({
             message: "게시글이 성공적으로 삭제 되었습니다.",
         });
@@ -214,7 +229,7 @@ const deletePost = async (req: AuthRequest<{ id: string }>, res: Response) => {
     }
 };
 
-export const votePost = async (req: AuthRequest<{ postId: string }>, res: Response) => {
+const votePost = async (req: AuthRequest<{ postId: string }>, res: Response) => {
     try {
         // 투표가 이루어지는 글번호(ID)   => 동적 라우팅을 통해 주소 => AuthRequest에 제네릭
         // 투표를 한 사람의 ID          => req.user => req라는 요청 내용 박스의 모양이 바뀌어야 함
@@ -301,11 +316,12 @@ const cancelVotePost = async (req: AuthRequest<{ postId: string }>, res: Respons
 };
 
 export default {
+    getRecentPosts,
     getPostsByCategory,
     getPostById,
     createPost,
     updatePost,
-    deletePost,
+    privatePost,
     votePost,
     cancelVotePost,
 };
