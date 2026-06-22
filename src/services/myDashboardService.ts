@@ -1,6 +1,11 @@
 import prisma from "../config/prisma.ts";
 
-const getMyDashboardSummary = async (userId: number, postPage: number, replyPage: number, size: number) => {
+const getMyDashboardSummary = async (
+    userId: number,
+    postPage: number,
+    replyPage: number,
+    size: number,
+) => {
     const postSkip = (postPage - 1) * size;
     const replySkip = (replyPage - 1) * size;
 
@@ -36,6 +41,13 @@ const getMyDashboardSummary = async (userId: number, postPage: number, replyPage
             },
             orderBy: {
                 createdAt: "desc",
+            },
+            include: {
+                post: {
+                    select: {
+                        title: true,
+                    },
+                },
             },
             skip: replySkip,
             take: size,
